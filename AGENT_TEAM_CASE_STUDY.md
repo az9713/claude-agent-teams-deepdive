@@ -154,8 +154,58 @@ Phase 6 (Precision):    [tree-sitter background task]
 Phase 7 (Distribution): [distro-agent]
 ```
 
-Note: Phases 3+4 overlapped. Phases 5+7 overlapped. Phase 6 ran as a background
-task agent while the lead did integration work.
+### Phase Timeline (Horizontal) -- Highlighting Overlaps
+
+The naive approach is to run all 7 phases sequentially. Instead, the team lead
+identified phases with **no code dependencies on each other** and overlapped them,
+saving ~30 minutes of wall-clock time.
+
+```
+Time ──────►  01:38       01:50  02:00      02:10         02:28  02:35       02:43  02:48   02:57
+              │            │     │           │              │     │            │     │        │
+              ▼            ▼     ▼           ▼              ▼     ▼            ▼     ▼        ▼
+ ┌─────────────────────┐
+ │  Phase 1: MVP       │ 3 agents: scanner, discovery, output
+ │  Scanner + Output   │
+ └──────────┬──────────┘
+            │  ┌──────────────────┐
+            └─►│  Phase 2: Core   │ 3 agents: config, formatters, filter
+               │  Config/Filters  │
+               └────────┬─────────┘
+                        │  ┌──────────────────────┐
+                        └─►│  Phase 3: Git         │ 2 agents: blame, diff
+                           │  Blame + Diff         │
+                           ├ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─┤ ◄── OVERLAPPED: 3 agents
+                           │  Phase 4: CI          │     from 2 phases ran
+                           │  Policy + SARIF       │     simultaneously
+                           └──────────┬────────────┘     (no code dependencies)
+                                      │  ┌─────────────────┐
+                                      └─►│  Phase 5: Cache  │ 1 agent: cache
+                                         │  SQLite + mmap   │
+                                         ├ ─ ─ ─ ─ ─ ─ ─ ─ ┤ ◄── OVERLAPPED: Rust code
+                                         │  Phase 7: Distro │     vs YAML/Docker files
+                                         │  CI/CD + Docker  │     (zero file overlap)
+                                         └───────┬─────────┘
+                                                 │  ┌──────────┐
+                                                 └─►│ Phase 6  │ 1 bg task: tree-sitter
+                                                    │ Precise  │
+                                                    └────┬─────┘
+                                                         │
+                                                         ▼
+                                                    ┌─────────┐
+                                                    │  COMMIT  │ 50 files, 7521 lines
+                                                    └─────────┘
+
+ Legend:
+ ─────────  sequential dependency (output of one phase feeds the next)
+ ─ ─ ─ ─   overlapped phases (no dependency, ran in parallel)
+```
+
+**Without overlap** (strictly sequential): Phases 3, 4, 5, 7 each wait for the
+previous to finish. Estimated ~150 min.
+
+**With overlap**: Phases 3+4 share a time slot. Phases 5+7 share a time slot.
+Actual: **~79 min (1.9x speedup)**.
 
 ---
 
