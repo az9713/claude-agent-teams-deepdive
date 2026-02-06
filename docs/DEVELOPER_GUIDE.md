@@ -217,7 +217,7 @@ Download from https://code.visualstudio.com/ and install for your platform.
 If you haven't already:
 
 ```bash
-git clone https://github.com/your-username/todo-tracker.git
+git clone https://github.com/az9713/claude-agent-teams-deepdive.git
 cd todo-tracker
 ```
 
@@ -2655,7 +2655,7 @@ Or use a pure-Rust alternative (e.g., `rustls` instead of `openssl`).
 
 **Project-specific:**
 
-- Open an issue: https://github.com/your-username/todo-tracker/issues
+- Open an issue: https://github.com/az9713/claude-agent-teams-deepdive/issues
 - Read the case study: `AGENT_TEAM_CASE_STUDY.md` (how this project was built)
 - Read the architecture exploration: `exploration-architecture.md`
 

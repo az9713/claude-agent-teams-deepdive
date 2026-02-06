@@ -1,5 +1,7 @@
 # Observing Claude Opus 4.6 Agent Teams in Action
 
+**Repository**: [github.com/az9713/claude-agent-teams-deepdive](https://github.com/az9713/claude-agent-teams-deepdive)
+
 ## What This Project Is
 
 This is **not** primarily a TODO tracker application. The application is a vehicle.

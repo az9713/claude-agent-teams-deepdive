@@ -53,7 +53,7 @@ rustc --version
 **Clone, Build, and Install:**
 
 ```bash
-git clone https://github.com/yourusername/todo-tracker.git
+git clone https://github.com/az9713/claude-agent-teams-deepdive.git
 cd todo-tracker
 cargo install --path .
 ```
@@ -89,7 +89,7 @@ This mounts your current directory into the container and scans it.
 
 ### From Pre-built Binaries (GitHub Releases)
 
-1. Go to the [Releases page](https://github.com/yourusername/todo-tracker/releases)
+1. Go to the [Releases page](https://github.com/az9713/claude-agent-teams-deepdive/releases)
 2. Download the binary for your platform:
    - `todos-linux-x86_64.tar.gz` for Linux
    - `todos-macos-x86_64.tar.gz` for macOS (Intel)
@@ -849,7 +849,7 @@ jobs:
 
       - name: Install todo-tracker
         run: |
-          cargo install --git https://github.com/yourusername/todo-tracker.git
+          cargo install --git https://github.com/az9713/claude-agent-teams-deepdive.git
 
       - name: Run TODO policy check
         run: todos check --max-todos=100 --require-issue=FIXME,BUG --deny=NOCOMMIT
@@ -896,7 +896,7 @@ Create `.pre-commit-config.yaml`:
 
 ```yaml
 repos:
-  - repo: https://github.com/yourusername/todo-tracker
+  - repo: https://github.com/az9713/claude-agent-teams-deepdive
     rev: v0.1.0
     hooks:
       # Check policy on all TODOs
@@ -1665,7 +1665,7 @@ todos check --help
 
 Found a bug or have a feature request?
 
-1. Check existing issues: https://github.com/yourusername/todo-tracker/issues
+1. Check existing issues: https://github.com/az9713/claude-agent-teams-deepdive/issues
 2. Create a new issue with:
    - Todo-tracker version (`todos --version`)
    - Operating system
