@@ -13,10 +13,11 @@
 5. [Phase-by-Phase Execution](#phase-by-phase-execution)
 6. [Visual Timeline](#visual-timeline)
 7. [Agent Roster](#agent-roster)
-8. [Coordination Patterns](#coordination-patterns)
-9. [Conflict Resolution](#conflict-resolution)
-10. [Final Statistics](#final-statistics)
-11. [Key Takeaways](#key-takeaways)
+8. [Inter-Agent Communication](#inter-agent-communication)
+9. [Coordination Patterns](#coordination-patterns)
+10. [Conflict Resolution](#conflict-resolution)
+11. [Final Statistics](#final-statistics)
+12. [Key Takeaways](#key-takeaways)
 
 ---
 
@@ -28,7 +29,7 @@ design plan. The project -- `todo-tracker` (binary: `todos`) -- is a fast, cross
 TODO linter with 7 implementation phases, 30 source files, 5,759 lines of Rust, and
 173 passing tests.
 
-**The entire build took approximately 75 minutes**, from plan to committed code.
+**The entire build took approximately 84 minutes** (01:31-02:55 UTC), from plan to committed code.
 
 The session demonstrates how Agent Teams enable:
 - **Parallelism**: 3-4 agents building independent modules simultaneously
@@ -161,7 +162,7 @@ identified phases with **no code dependencies on each other** and overlapped the
 saving ~30 minutes of wall-clock time.
 
 ```
-Time ──────►  01:38       01:50  02:00      02:10         02:28  02:35       02:43  02:48   02:57
+Time ──────►  01:31       01:50  02:00      02:10         02:28  02:35       02:43  02:48   02:55
               │            │     │           │              │     │            │     │        │
               ▼            ▼     ▼           ▼              ▼     ▼            ▼     ▼        ▼
  ┌─────────────────────┐
@@ -199,13 +200,16 @@ Time ──────►  01:38       01:50  02:00      02:10         02:28  0
  Legend:
  ─────────  sequential dependency (output of one phase feeds the next)
  ─ ─ ─ ─   overlapped phases (no dependency, ran in parallel)
+
+ Note on timestamps: All times are UTC on 2026-02-06, derived from the session
+ transcript (JSONL). Session start was 01:31:15 UTC; final shutdown was 02:55:10 UTC.
 ```
 
 **Without overlap** (strictly sequential): Phases 3, 4, 5, 7 each wait for the
 previous to finish. Estimated ~150 min.
 
 **With overlap**: Phases 3+4 share a time slot. Phases 5+7 share a time slot.
-Actual: **~79 min (1.9x speedup)**.
+Actual: **~84 min (1.8x speedup)**.
 
 ---
 
@@ -215,7 +219,7 @@ Actual: **~79 min (1.9x speedup)**.
 
 **Goal**: `todos list` works with grouped output, metadata extraction, color coding.
 
-#### Step 1: Team Lead Creates Scaffolding (~01:38-01:42 UTC)
+#### Step 1: Team Lead Creates Scaffolding (~01:31-01:39 UTC)
 
 Before spawning any agents, the team lead created the project skeleton so that
 agents would write code into a compilable project:
@@ -233,7 +237,7 @@ agents would write code into a compilable project:
 declaring the traits and types, agents' code wouldn't compile, and they couldn't
 run `cargo check` to verify their work.
 
-#### Step 2: Spawn 3 Agents in Parallel (~01:42 UTC)
+#### Step 2: Spawn 3 Agents in Parallel (~01:39 UTC)
 
 The team lead spawned three agents simultaneously using the `Task` tool with
 `team_name: "todo-tracker-build"`:
@@ -251,7 +255,7 @@ Each agent received a detailed prompt containing:
 - Specific requirements (e.g., "10 languages: Rust, Go, Python, JS, TS, Java, C, C++, C#, Ruby")
 - Testing requirements
 
-#### Step 3: Agents Work Independently (~01:42-01:50 UTC)
+#### Step 3: Agents Work Independently (~01:39-01:50 UTC)
 
 All three agents worked simultaneously, each in their own context:
 
@@ -427,10 +431,10 @@ uses `StreamingIterator` from the `streaming-iterator` crate. Team lead fixed:
 ```
 Time (UTC)  Team Lead Activity                    Agents Running
 02/06
-01:38  |  Create team "todo-tracker-build"
-01:40  |  Write scaffolding (Cargo.toml,
+01:31  |  Create team "todo-tracker-build"
+01:33  |  Write scaffolding (Cargo.toml,
        |  model.rs, error.rs, lib.rs, stubs)
-01:42  |  Spawn Phase 1 agents .................. [scanner-agent] [discovery-agent] [output-agent]
+01:39  |  Spawn Phase 1 agents .................. [scanner-agent] [discovery-agent] [output-agent]
        |  (waiting for agents)                     |                |                |
 01:47  |                                           |                |                * output done (12 tests)
 01:48  |                                           |                * discovery done (11 tests)
@@ -469,9 +473,9 @@ Time (UTC)  Team Lead Activity                    Agents Running
        |  `cargo test --features precise`
        |  = 173 pass
 02:55  |  Send shutdown to all 11 agents           x x x x x x x x x x x
-02:56  |  All agents terminated
+       |  All agents terminated within 5 seconds
        |  Team cleanup
-02:57  |  `git commit` (50 files, 7521 lines)
+       |  `git commit` (50 files, 7521 lines)
 
 *  diff-agent: tests are integration-level, tested via CLI
 ** distro-agent: YAML/Dockerfile files, no unit tests applicable
@@ -480,7 +484,7 @@ Time (UTC)  Team Lead Activity                    Agents Running
 ### Gantt-Style View of Agent Lifespans
 
 ```
-Agent              01:42    01:50    02:00    02:10    02:20    02:30    02:40    02:50    02:56
+Agent              01:39    01:50    02:00    02:10    02:20    02:30    02:40    02:50    02:55
                      |        |        |        |        |        |        |        |        |
 scanner-agent      [========]idle.....................................................................X
 discovery-agent    [======]idle.......................................................................X
@@ -505,17 +509,17 @@ Legend: [====] = actively working    idle = waiting    X = shutdown
 
 | # | Agent Name | Phase | Role | Model | Lines Written | Tests Written | Created (UTC) | Completed | Shut Down |
 |---|-----------|-------|------|-------|--------------|--------------|---------------|-----------|-----------|
-| 1 | scanner-agent | 1 | Regex scanner + language DB | Sonnet 4.5 | 653 | 29 | ~01:42 | ~01:50 | 02:56:07 |
-| 2 | discovery-agent | 1 | File discovery + orchestrator | Sonnet 4.5 | 496 | 11 | ~01:42 | ~01:48 | 02:56:02 |
-| 3 | output-agent | 1 | Text formatter + output dispatch | Sonnet 4.5 | 490 | 12 | ~01:42 | ~01:47 | 02:56:02 |
-| 4 | config-agent | 2 | TOML config + init command | Sonnet 4.5 | 250 | 9 | ~02:00 | ~02:04 | 02:55:13 |
-| 5 | formatters-agent | 2 | JSON, CSV, Markdown formatters | Sonnet 4.5 | 639 | 17 | ~02:00 | ~02:04 | 02:55:22 |
-| 6 | filter-agent | 2 | Filter engine + stats command | Sonnet 4.5 | 380 | 18 | ~02:00 | ~02:08 | 02:55:24 |
-| 7 | blame-agent | 3 | Git blame parser + blame command | Sonnet 4.5 | 267 | 8 | ~02:10 | ~02:27 | 02:56:08 |
-| 8 | diff-agent | 3 | Git diff + diff command | Sonnet 4.5 | 211 | 0* | ~02:10 | ~02:26 | 02:55:51 |
-| 9 | policy-agent | 4 | Policy engine + SARIF + GA output | Sonnet 4.5 | 717 | 29 | ~02:10 | ~02:27 | 02:55:54 |
-| 10 | cache-agent | 5 | SQLite cache + incremental scanner | Sonnet 4.5 | 425 | 8 | ~02:35 | ~02:42 | 02:56:02 |
-| 11 | distro-agent | 7 | CI/CD, Docker, pre-commit | Sonnet 4.5 | ~150 | 0** | ~02:35 | ~02:41 | 02:55:48 |
+| 1 | scanner-agent | 1 | Regex scanner + language DB | Sonnet 4.5 | 653 | 29 | 01:39:39 | ~01:50 | 02:55:05 |
+| 2 | discovery-agent | 1 | File discovery + orchestrator | Sonnet 4.5 | 496 | 11 | 01:40:10 | ~01:48 | 02:55:05 |
+| 3 | output-agent | 1 | Text formatter + output dispatch | Sonnet 4.5 | 490 | 12 | 01:40:56 | ~01:47 | 02:55:05 |
+| 4 | config-agent | 2 | TOML config + init command | Sonnet 4.5 | 250 | 9 | ~02:00 | ~02:04 | 02:55:05 |
+| 5 | formatters-agent | 2 | JSON, CSV, Markdown formatters | Sonnet 4.5 | 639 | 17 | ~02:00 | ~02:04 | 02:55:05 |
+| 6 | filter-agent | 2 | Filter engine + stats command | Sonnet 4.5 | 380 | 18 | ~02:00 | ~02:08 | 02:55:07 |
+| 7 | blame-agent | 3 | Git blame parser + blame command | Sonnet 4.5 | 267 | 8 | ~02:10 | ~02:27 | 02:55:07 |
+| 8 | diff-agent | 3 | Git diff + diff command | Sonnet 4.5 | 211 | 0* | ~02:10 | ~02:26 | 02:55:07 |
+| 9 | policy-agent | 4 | Policy engine + SARIF + GA output | Sonnet 4.5 | 717 | 29 | ~02:10 | ~02:27 | 02:55:07 |
+| 10 | cache-agent | 5 | SQLite cache + incremental scanner | Sonnet 4.5 | 425 | 8 | ~02:35 | ~02:42 | 02:55:10 |
+| 11 | distro-agent | 7 | CI/CD, Docker, pre-commit | Sonnet 4.5 | ~150 | 0** | ~02:35 | ~02:41 | 02:55:10 |
 | -- | tree-sitter (bg task) | 6 | Tree-sitter AST scanner | Sonnet 4.5 | 516 | 23 | ~02:43 | ~02:48 | (auto) |
 | -- | **Team Lead** | All | Orchestration + integration | **Opus 4.6** | ~1,565 | 9 | session start | session end | -- |
 
@@ -538,6 +542,165 @@ Legend: [====] = actively working    idle = waiting    X = shutdown
 - Writes implementation code with unit tests
 - Runs `cargo check` to verify compilation
 - Reports back with a summary of what was built and test results
+
+---
+
+## Inter-Agent Communication
+
+### Communication Topology: Hub-and-Spoke
+
+A critical finding from this session: **there was zero direct peer-to-peer communication
+between teammate agents**. All coordination flowed through the team lead:
+
+```
+                           ┌──────────────┐
+                           │  Team Lead   │
+                           │  (Opus 4.6)  │
+                           └──────┬───────┘
+                                  │
+              ┌───────────────────┼───────────────────┐
+              │                   │                   │
+         ┌────▼────┐        ┌────▼────┐        ┌────▼────┐
+         │ Agent A │        │ Agent B │        │ Agent C │
+         │(Sonnet) │        │(Sonnet) │        │(Sonnet) │
+         └─────────┘        └─────────┘        └─────────┘
+
+  ↕ = bidirectional messages       ╳ = no peer-to-peer communication
+  Agent A ──╳── Agent B ──╳── Agent C
+```
+
+No teammate ever sent a message to another teammate. The team lead was the sole
+coordinator, hub, and point of integration.
+
+### Communication Channels and Message Counts
+
+Analysis of the full session transcript reveals three distinct communication channels:
+
+| Channel | Direction | Mechanism | Count | Purpose |
+|---------|-----------|-----------|-------|---------|
+| **Assignment** | Lead → Teammate | `Task` tool spawn prompt | 12 | Detailed instructions with file paths, interfaces, requirements, testing expectations |
+| **Completion** | Teammate → Lead | Automatic idle notification | 12 | System-generated when agent finishes a turn; includes work summary |
+| **Shutdown** | Lead → Teammate | `SendMessage(shutdown_request)` | 11 | Graceful termination at end of session |
+| **Shutdown ACK** | Teammate → Lead | `SendMessage(shutdown_response)` | 11 | Agent approves shutdown, process terminates |
+| **Task tracking** | Both directions | `TaskCreate`, `TaskUpdate` | 40+ | Shared task list for progress tracking |
+
+**Total explicit messages**: 56 `SendMessage` invocations (all shutdown-related).
+
+During the active build phases, agents did **not** exchange messages at all. Coordination
+was entirely implicit:
+
+### Implicit Coordination Mechanisms
+
+Since agents never talked to each other, how did they produce compatible code?
+
+**1. Shared Type Definitions (Pre-established Contracts)**
+
+The team lead created `model.rs` with all shared types before spawning any agent:
+```
+model.rs defines:  TodoItem, TodoTag, Priority, ScanResult, ScanStats, ScanMetadata
+                        ↓              ↓           ↓
+scanner-agent uses: TodoItem, TodoTag, Priority
+discovery-agent uses: TodoItem, ScanResult, ScanStats
+output-agent uses:  TodoItem, ScanResult, ScanStats
+```
+All agents imported from the same `crate::model` module. No negotiation needed.
+
+**2. Trait-Based Interfaces (Compile-Time Contracts)**
+
+The team lead defined `FileScanner` and `OutputFormatter` traits as stubs. Agents
+implemented these traits independently, and the compiler verified compatibility:
+```
+trait FileScanner { fn scan_file(&self, path: &Path) -> Result<Vec<TodoItem>>; }
+     │                                                           │
+     ├── RegexScanner implements this (scanner-agent)            │
+     └── TreeSitterScanner implements this (tree-sitter bg task) │
+                                                                 │
+     Output: Vec<TodoItem> ──────────────────────────────────────┘
+                                    │
+                            format_output() consumes this
+                            (output-agent, formatters-agent)
+```
+
+**3. File System as Shared State**
+
+Agents could read (but not write to) files owned by other agents or the team lead.
+For example:
+- **scanner-agent** read `model.rs` to understand `TodoItem` fields
+- **diff-agent** read `git/blame.rs` (written by blame-agent) to understand the git module structure
+- **policy-agent** read `cli.rs` to understand existing command patterns before adding `Check`
+
+The file system served as a read-only shared knowledge base.
+
+**4. Shared Task List**
+
+The team used a shared task list at `~/.claude/tasks/todo-tracker-build/`:
+```
+Task #1: "Implement scanner/languages.rs + regex.rs"    owner: scanner-agent     ✓
+Task #2: "Implement discovery.rs and orchestrator"       owner: discovery-agent   ✓
+Task #3: "Implement text output formatter"               owner: output-agent      ✓
+Task #4: "cli.rs, main.rs wiring, test fixtures"         owner: team-lead         ✓
+...
+```
+
+Agents used `TaskUpdate` to mark tasks `in_progress` and `completed`, giving the
+team lead visibility into progress without requiring explicit messages.
+
+### Why No Peer-to-Peer Communication?
+
+The team lead's strategy **intentionally avoided** the need for agents to coordinate
+with each other:
+
+1. **Clear file ownership**: No two agents wrote to the same file, so no merge conflicts
+2. **Pre-established interfaces**: Shared types and traits meant agents didn't need to
+   agree on data formats at runtime
+3. **Integration by the lead**: The team lead (not agents) handled all cross-module
+   wiring in `cli.rs` and `main.rs`
+4. **Phase sequencing**: Later phases only started after earlier phases were integrated
+   and stable
+
+This design choice has implications:
+- **Simpler**: No message passing complexity, no coordination protocols
+- **Predictable**: Each agent's scope is entirely defined at spawn time
+- **Scalable**: Adding more agents doesn't increase communication overhead (it stays O(n), not O(n²))
+- **Trade-off**: The team lead becomes a bottleneck during integration phases
+
+### Shutdown Protocol: The Only Real Dialog
+
+The shutdown sequence at session end was the only true bidirectional exchange:
+
+```
+02:55:05 UTC  Lead → output-agent:     "Task complete, wrapping up the session"
+02:55:05 UTC  output-agent → Lead:     shutdown_approved (ID: shutdown-1770346505049@output-agent)
+02:55:05 UTC  Lead → discovery-agent:  "Task complete, wrapping up the session"
+02:55:05 UTC  discovery-agent → Lead:  shutdown_approved (ID: shutdown-1770346505082@discovery-agent)
+02:55:05 UTC  Lead → scanner-agent:    "Task complete, wrapping up the session"
+02:55:05 UTC  scanner-agent → Lead:    shutdown_approved (ID: shutdown-1770346505107@scanner-agent)
+02:55:05 UTC  Lead → config-agent:     "Task complete, wrapping up the session"
+02:55:05 UTC  config-agent → Lead:     shutdown_approved
+02:55:05 UTC  Lead → formatters-agent: "Task complete, wrapping up the session"
+02:55:05 UTC  formatters-agent → Lead: shutdown_approved
+02:55:07 UTC  Lead → filter-agent:     "Task complete, wrapping up the session"
+02:55:07 UTC  filter-agent → Lead:     shutdown_approved
+02:55:07 UTC  Lead → diff-agent:       "Task complete, wrapping up the session"
+02:55:07 UTC  diff-agent → Lead:       shutdown_approved
+02:55:07 UTC  Lead → blame-agent:      "Task complete, wrapping up the session"
+02:55:07 UTC  blame-agent → Lead:      shutdown_approved
+02:55:07 UTC  Lead → policy-agent:     "Task complete, wrapping up the session"
+02:55:07 UTC  policy-agent → Lead:     shutdown_approved
+02:55:10 UTC  Lead → cache-agent:      "Task complete, wrapping up the session"
+02:55:10 UTC  cache-agent → Lead:      shutdown_approved
+02:55:10 UTC  Lead → distro-agent:     "Task complete, wrapping up the session"
+02:55:10 UTC  distro-agent → Lead:     shutdown_approved
+```
+
+All 11 agents approved shutdown within 5 seconds. None rejected or requested more time.
+
+### Cross-Team Communication
+
+This session used a single team (`todo-tracker-build`). No cross-team communication
+occurred. The documentation phase later used independent background task agents
+(not teammates), which have no communication channel at all -- they simply write
+files and report completion.
 
 ---
 
@@ -691,19 +854,24 @@ version-specific quirks.
 
 | Milestone | Time (UTC) | Elapsed |
 |-----------|-----------|---------|
-| Session start | ~01:38 | 0:00 |
-| Phase 1 agents done | ~01:50 | 0:12 |
-| Phase 1 integrated | ~02:00 | 0:22 |
-| Phase 2 agents done | ~02:08 | 0:30 |
-| Phase 2 integrated | ~02:10 | 0:32 |
-| Phase 3+4 agents done | ~02:28 | 0:50 |
-| Phase 3+4 integrated | ~02:35 | 0:57 |
-| Phase 5+7 agents done | ~02:42 | 1:04 |
-| Phase 5+6+7 integrated | ~02:48 | 1:10 |
-| All tests pass | ~02:50 | 1:12 |
-| Git commit | ~02:57 | 1:19 |
+| Session start (plan received) | 01:31:15 | 0:00 |
+| Scaffolding complete | ~01:39 | 0:08 |
+| Phase 1 agents spawned | 01:39:39 | 0:08 |
+| Phase 1 agents done | ~01:50 | 0:19 |
+| Phase 1 integrated | ~02:00 | 0:29 |
+| Phase 2 agents done | ~02:08 | 0:37 |
+| Phase 2 integrated | ~02:10 | 0:39 |
+| Phase 3+4 agents done | ~02:28 | 0:57 |
+| Phase 3+4 integrated | ~02:35 | 1:04 |
+| Phase 5+7 agents done | ~02:42 | 1:11 |
+| Phase 5+6+7 integrated | ~02:48 | 1:17 |
+| All tests pass (173) | ~02:50 | 1:19 |
+| All 11 agents shut down | 02:55:10 | 1:24 |
 
-**Total wall-clock time: ~79 minutes**
+**Total wall-clock time: ~84 minutes** (01:31:15 - 02:55:10 UTC)
+
+*Note: Timestamps prefixed with `~` are approximations from conversation flow.
+Timestamps without `~` are exact values from the session transcript (JSONL).*
 
 ### Parallel Speedup Estimate
 
@@ -713,7 +881,7 @@ If done sequentially (one agent at a time, same speed):
 - Phase 3+4: 3 agents x 17 min avg = 51 min -> done in 17 min (3x speedup)
 - Phase 5+7: 2 agents x 7 min avg = 14 min -> done in 7 min (2x speedup)
 
-**Estimated sequential time: ~150 min. Actual: ~79 min. Parallel speedup: ~1.9x**
+**Estimated sequential time: ~150 min. Actual: ~84 min. Parallel speedup: ~1.8x**
 
 The speedup is less than theoretical maximum because:
 - Integration/wiring time between phases is sequential
@@ -766,4 +934,4 @@ The speedup is less than theoretical maximum because:
 
 *Document generated from a real Claude Code session on 2026-02-06.*
 *Team: todo-tracker-build | Lead: Claude Opus 4.6 | Agents: 11 x Claude Sonnet 4.5*
-*Total output: 50 files, 7,521 lines, 173 tests, 79 minutes wall-clock time.*
+*Total output: 50 files, 7,521 lines, 173 tests, 84 minutes wall-clock time.*
