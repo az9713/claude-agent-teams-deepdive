@@ -1,0 +1,13 @@
+- id: todo-tracker-check
+  name: todo-tracker check
+  entry: todos check --staged-only
+  language: system
+  pass_filenames: false
+  types: [text]
+
+- id: todo-tracker-nocommit
+  name: todo-tracker deny NOCOMMIT
+  entry: todos check --deny=NOCOMMIT --staged-only
+  language: system
+  pass_filenames: false
+  types: [text]

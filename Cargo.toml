@@ -1,0 +1,65 @@
+[package]
+name = "todo-tracker"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "todos"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+ignore = "0.4"
+regex = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+thiserror = "2"
+anyhow = "1"
+colored = "2"
+rayon = "1"
+crossbeam-channel = "0.5"
+csv = "1"
+unicode-width = "0.2"
+tempfile = "3"
+rusqlite = { version = "0.32", features = ["bundled"] }
+indicatif = "0.17"
+memmap2 = "0.9"
+tree-sitter = { version = "0.24", optional = true }
+streaming-iterator = { version = "0.1", optional = true }
+tree-sitter-rust = { version = "0.23", optional = true }
+tree-sitter-javascript = { version = "0.23", optional = true }
+tree-sitter-python = { version = "0.23", optional = true }
+tree-sitter-go = { version = "0.23", optional = true }
+tree-sitter-java = { version = "0.23", optional = true }
+tree-sitter-c = { version = "0.23", optional = true }
+tree-sitter-cpp = { version = "0.23", optional = true }
+tree-sitter-ruby = { version = "0.23", optional = true }
+
+[features]
+default = []
+precise = [
+    "tree-sitter",
+    "streaming-iterator",
+    "tree-sitter-rust",
+    "tree-sitter-javascript",
+    "tree-sitter-python",
+    "tree-sitter-go",
+    "tree-sitter-java",
+    "tree-sitter-c",
+    "tree-sitter-cpp",
+    "tree-sitter-ruby",
+]
+
+[dev-dependencies]
+assert_cmd = "2"
+predicates = "3"
+tempfile = "3"
+insta = { version = "1", features = ["yaml"] }
+
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/v{ version }/todos-{ target }.{ archive-format }"
+pkg-fmt = "tgz"
+
+[package.metadata.binstall.overrides.x86_64-pc-windows-msvc]
+pkg-fmt = "zip"
